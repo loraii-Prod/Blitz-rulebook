@@ -1,4 +1,4 @@
-name: Restore original seeding weights
+name: Publish approved rulebook changes
 
 on:
   push:
@@ -8,12 +8,12 @@ permissions:
   contents: write
 
 jobs:
-  update-seeding:
+  publish:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ensure original seeding weights
+      - name: Apply approved changes
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -21,9 +21,11 @@ jobs:
           t = p.read_text()
           t = t.replace('grid-template-columns:repeat(10,1fr)', 'grid-template-columns:repeat(8,1fr)')
           t = t.replace('[14,12,11,9,8,6,5,3,2,0]', '[17.5,15,12.5,10,7.5,5,2.5,0]')
+          t = t.replace('loraii / alxshaer / wouter</p>', 'loraii / alxshaer / wouter / falcogrine</p>')
+          t = t.replace('loraii · alxshaer · wouter</p>', 'loraii · alxshaer · wouter · falcogrine</p>')
           p.write_text(t)
           PY
-      - name: Commit update if needed
+      - name: Commit update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -32,5 +34,5 @@ jobs:
             echo "No index changes needed."
             exit 0
           fi
-          git commit -m "Restore original 8-round seeding weights"
+          git commit -m "Publish approved rulebook changes"
           git push
