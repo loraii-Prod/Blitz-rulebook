@@ -1,4 +1,4 @@
-name: Add Falcogrine to organizers
+name: Add automatic tournament progress highlighting
 
 on:
   push:
@@ -8,29 +8,36 @@ permissions:
   contents: write
 
 jobs:
-  update-admins:
+  update-progress:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add organizer
+      - name: Add automatic deadline highlighting
         run: |
           python - <<'PY'
           from pathlib import Path
+
           p = Path('index.html')
           text = p.read_text()
-          old = 'loraii / alxshaer / wouter'
-          new = 'loraii / alxshaer / wouter / falcogrine'
-          if new in text:
-              raise SystemExit('Falcogrine already listed.')
-          if old not in text:
-              raise SystemExit('Organizer list not found; no change made.')
-          p.write_text(text.replace(old, new, 1))
+          marker = 'blitz-auto-progress'
+          if marker in text:
+              raise SystemExit('Automatic progress highlighting already installed.')
+
+          css = '''\n<style id="blitz-auto-progress">\n.deadline-item.hot{background:transparent;color:var(--fg)}\n.deadline-item.hot .s{color:var(--muted)}\n.deadline-item.blitz-current{background:var(--acid);color:#080908}\n.deadline-item.blitz-current .s{color:#3f5014}\n.deadline-item.blitz-complete{opacity:.42}\n.deadline-item.blitz-current{opacity:1}\n</style>\n'''
+
+          js = '''\n<script id="blitz-auto-progress-script">\n(() => {\n  const items = [...document.querySelectorAll('.deadline-item')];\n  if (!items.length) return;\n\n  // Tournament milestones in Europe/Paris local time.\n  // The green card represents the next/current milestone.\n  const milestones = [\n    '2026-09-13T21:00:00+02:00', // Maps + Time Attack open (+2 COTD)\n    '2026-09-20T00:00:00+02:00', // Registration + TA close (+5 COTD on Sep 19)\n    '2026-09-20T18:00:00+02:00', // Seeding Session 1 (-1 COTD)\n    '2026-09-20T19:00:00+02:00'  // Seeding Session 2 (+0 COTD)\n  ].map(x => new Date(x));\n\n  const update = () => {\n    const now = new Date();\n    items.forEach(el => el.classList.remove('hot', 'blitz-current', 'blitz-complete'));\n\n    let active = milestones.findIndex(date => now < date);\n    if (active === -1) active = items.length - 1;\n\n    items.forEach((el, i) => {\n      if (i < active) el.classList.add('blitz-complete');\n      if (i === active) el.classList.add('blitz-current');\n    });\n  };\n\n  update();\n  setInterval(update, 60000);\n})();\n</script>\n'''
+
+          if '</head>' not in text or '</body>' not in text:
+              raise SystemExit('HTML closing tags not found.')
+          text = text.replace('</head>', css + '</head>', 1)
+          text = text.replace('</body>', js + '</body>', 1)
+          p.write_text(text)
           PY
       - name: Commit update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Add Falcogrine to organizers"
+          git commit -m "Add automatic tournament progress highlighting"
           git push
