@@ -1,4 +1,4 @@
-name: Add automatic tournament progress highlighting
+name: Restore 30/70 seeding scorecard
 
 on:
   push:
@@ -8,25 +8,72 @@ permissions:
   contents: write
 
 jobs:
-  update-progress:
+  restore-seeding-card:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add automatic deadline highlighting
+      - name: Restore seeding visual structure
         run: |
           python - <<'PY'
           from pathlib import Path
 
           p = Path('index.html')
           text = p.read_text()
-          marker = 'blitz-auto-progress'
+          marker = 'blitz-seeding-card-restore'
           if marker in text:
-              raise SystemExit('Automatic progress highlighting already installed.')
+              raise SystemExit('Seeding scorecard restore already installed.')
 
-          css = '''\n<style id="blitz-auto-progress">\n.deadline-item.hot{background:transparent;color:var(--fg)}\n.deadline-item.hot .s{color:var(--muted)}\n.deadline-item.blitz-current{background:var(--acid);color:#080908}\n.deadline-item.blitz-current .s{color:#3f5014}\n.deadline-item.blitz-complete{opacity:.42}\n.deadline-item.blitz-current{opacity:1}\n</style>\n'''
+          css = '''
+<style id="blitz-seeding-card-restore">
+.seed-layout{display:grid!important;grid-template-columns:.72fr 1.28fr!important;gap:36px!important;align-items:stretch}
+.scorecard{border-top:1px solid var(--hair)!important;padding-top:18px!important}
+.score-total{display:flex!important;justify-content:space-between!important;align-items:flex-end!important}
+.score-total strong{font-size:58px!important;line-height:.85!important;letter-spacing:-.08em!important}
+.score-total span{color:var(--muted)!important}
+.splitbar{height:16px!important;display:grid!important;grid-template-columns:30fr 70fr!important;margin:24px 0 34px!important}
+.splitbar i:first-child{background:var(--acid)!important}
+.splitbar i:last-child{background:#34392f!important}
+.round-grid{display:grid!important;grid-template-columns:repeat(10,1fr)!important;border-top:1px solid var(--hair)!important;border-left:1px solid var(--hair)!important}
+.round{padding:16px 10px 18px!important;border-right:1px solid var(--hair)!important;border-bottom:1px solid var(--hair)!important;min-height:92px!important}
+.round b{font-size:17px!important}
+.round small{display:block!important;margin-top:22px!important;color:var(--muted)!important}
+@media(max-width:980px){.seed-layout{grid-template-columns:1fr!important}}
+@media(max-width:680px){.round-grid{grid-template-columns:repeat(5,1fr)!important}}
+</style>
+'''
 
-          js = '''\n<script id="blitz-auto-progress-script">\n(() => {\n  const items = [...document.querySelectorAll('.deadline-item')];\n  if (!items.length) return;\n\n  // Tournament milestones in Europe/Paris local time.\n  // The green card represents the next/current milestone.\n  const milestones = [\n    '2026-09-13T21:00:00+02:00', // Maps + Time Attack open (+2 COTD)\n    '2026-09-20T00:00:00+02:00', // Registration + TA close (+5 COTD on Sep 19)\n    '2026-09-20T18:00:00+02:00', // Seeding Session 1 (-1 COTD)\n    '2026-09-20T19:00:00+02:00'  // Seeding Session 2 (+0 COTD)\n  ].map(x => new Date(x));\n\n  const update = () => {\n    const now = new Date();\n    items.forEach(el => el.classList.remove('hot', 'blitz-current', 'blitz-complete'));\n\n    let active = milestones.findIndex(date => now < date);\n    if (active === -1) active = items.length - 1;\n\n    items.forEach((el, i) => {\n      if (i < active) el.classList.add('blitz-complete');\n      if (i === active) el.classList.add('blitz-current');\n    });\n  };\n\n  update();\n  setInterval(update, 60000);\n})();\n</script>\n'''
+          js = '''
+<script id="blitz-seeding-card-script">
+(() => {
+  const scorecard = document.querySelector('.scorecard');
+  if (!scorecard) return;
+
+  const total = scorecard.querySelector('.score-total');
+  if (total) {
+    const strong = total.querySelector('strong');
+    const label = total.querySelector('span');
+    if (strong) strong.textContent = '30 / 70';
+    if (label) label.textContent = 'TA / ROUNDS';
+  }
+
+  const grid = scorecard.querySelector('.round-grid');
+  if (grid) {
+    const weights = [14,12,11,9,8,6,5,3,2,0];
+    grid.innerHTML = weights.map((w, i) => {
+      const pos = i === 0 ? 'fastest' : (i === weights.length - 1 ? 'slowest' : '');
+      return `<div class="round"><b>${w}%</b><small>${String(i+1).padStart(2,'0')}${pos ? ' /<br>' + pos : ''}</small></div>`;
+    }).join('');
+  }
+
+  const split = scorecard.querySelector('.splitbar');
+  if (split) split.style.gridTemplateColumns = '30fr 70fr';
+
+  const note = [...scorecard.querySelectorAll('p')].find(p => /rounds are ranked/i.test(p.textContent));
+  if (note) note.textContent = 'Rounds are ranked fastest → slowest. Your slowest round is worth 0%.';
+})();
+</script>
+'''
 
           if '</head>' not in text or '</body>' not in text:
               raise SystemExit('HTML closing tags not found.')
@@ -39,5 +86,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Add automatic tournament progress highlighting"
+          git commit -m "Restore 30/70 seeding scorecard layout"
           git push
