@@ -1,0 +1,34 @@
+name: Update hero copy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace hero copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text()
+          old = 'A compact RPG team league built around consistency, preparation and clean racing. Seed. Survive the group. Win the bracket.'
+          new = 'Every line matters. Every round counts. Master the RPG, earn your seed, survive the groups and fight your way through the bracket.'
+          if old not in text:
+              raise SystemExit('Old copy not found; no change made.')
+          p.write_text(text.replace(old, new, 1))
+          PY
+      - name: Commit update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Update Blitz League hero copy"
+          git push
