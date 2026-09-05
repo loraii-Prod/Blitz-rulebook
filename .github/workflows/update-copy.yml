@@ -1,4 +1,4 @@
-name: Correct seeding to 10 rounds
+name: Add Falcogrine to organizers
 
 on:
   push:
@@ -8,64 +8,29 @@ permissions:
   contents: write
 
 jobs:
-  update-seeding:
+  update-admins:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Update seeding format
+      - name: Add organizer
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-
           p = Path('index.html')
           text = p.read_text()
-          original = text
-
-          text = text.replace('8 rounds', '10 rounds')
-          text = text.replace('repeat(8,1fr)', 'repeat(10,1fr)')
-
-          # Replace the displayed 8-round weighting block with a 10-round, whole-number split totaling 70%.
-          old_weights = ['18%', '15%', '13%', '10%', '7%', '5%', '2%', '0%']
-          new_weights = ['14%', '12%', '11%', '9%', '8%', '6%', '5%', '3%', '2%', '0%']
-
-          # Target the round-grid block only, preserving the existing markup style.
-          m = re.search(r'(<div class="round-grid">)(.*?)(</div>\s*</div>\s*</div>)', text, flags=re.S)
-          if m:
-              block = m.group(2)
-              round_items = re.findall(r'<div class="round">.*?</div>', block, flags=re.S)
-              if len(round_items) == 8:
-                  template = round_items[0]
-                  rebuilt = []
-                  for i, weight in enumerate(new_weights, start=1):
-                      item = re.sub(r'(<b>).*?(</b>)', rf'\g<1>{weight}\g<2>', template, count=1, flags=re.S)
-                      item = re.sub(r'(<small>).*?(</small>)', rf'\g<1>R{i}\g<2>', item, count=1, flags=re.S)
-                      rebuilt.append(item)
-                  block = ''.join(rebuilt)
-                  text = text[:m.start(2)] + block + text[m.end(2):]
-              else:
-                  # Fallback: replace known weight labels and add two extra rounds before the grid closes.
-                  for old, new in zip(old_weights, new_weights[:8]):
-                      block = block.replace(old, new, 1)
-                  if len(round_items) >= 1:
-                      t = round_items[-1]
-                      r9 = re.sub(r'(<b>).*?(</b>)', r'\g<1>2%\g<2>', t, count=1, flags=re.S)
-                      r9 = re.sub(r'(<small>).*?(</small>)', r'\g<1>R9\g<2>', r9, count=1, flags=re.S)
-                      r10 = re.sub(r'(<b>).*?(</b>)', r'\g<1>0%\g<2>', t, count=1, flags=re.S)
-                      r10 = re.sub(r'(<small>).*?(</small>)', r'\g<1>R10\g<2>', r10, count=1, flags=re.S)
-                      block += r9 + r10
-                      text = text[:m.start(2)] + block + text[m.end(2):]
-
-          if text == original:
-              raise SystemExit('No seeding content changed.')
-
-          p.write_text(text)
+          old = 'loraii / alxshaer / wouter'
+          new = 'loraii / alxshaer / wouter / falcogrine'
+          if new in text:
+              raise SystemExit('Falcogrine already listed.')
+          if old not in text:
+              raise SystemExit('Organizer list not found; no change made.')
+          p.write_text(text.replace(old, new, 1))
           PY
       - name: Commit update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Correct seeding to 10 rounds"
+          git commit -m "Add Falcogrine to organizers"
           git push
