@@ -57,6 +57,15 @@ h3, .panel h3 { font-size: clamp(1.15rem, 2vw, 1.45rem) !important; }
   .back-top:hover{border-color:var(--acid);color:var(--acid)}
   @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto!important}.section{opacity:1;transform:none;transition:none}.back-top{transition:none}}
 </style>
+
+<style id="blitz-auto-progress">
+.deadline-item.hot{background:transparent;color:var(--fg)}
+.deadline-item.hot .s{color:var(--muted)}
+.deadline-item.blitz-current{background:var(--acid);color:#080908}
+.deadline-item.blitz-current .s{color:#3f5014}
+.deadline-item.blitz-complete{opacity:.42}
+.deadline-item.blitz-current{opacity:1}
+</style>
 </head>
 <body id="top">
 <div class="noise"></div>
@@ -139,6 +148,38 @@ h3, .panel h3 { font-size: clamp(1.15rem, 2vw, 1.45rem) !important; }
   window.addEventListener('scroll', updateProgress, { passive: true });
   window.addEventListener('resize', updateProgress);
   updateProgress();
+})();
+</script>
+
+<script id="blitz-auto-progress-script">
+(() => {
+  const items = [...document.querySelectorAll('.deadline-item')];
+  if (!items.length) return;
+
+  // Tournament milestones in Europe/Paris local time.
+  // The green card represents the next/current milestone.
+  const milestones = [
+    '2026-09-13T21:00:00+02:00', // Maps + Time Attack open (+2 COTD)
+    '2026-09-20T00:00:00+02:00', // Registration + TA close (+5 COTD on Sep 19)
+    '2026-09-20T18:00:00+02:00', // Seeding Session 1 (-1 COTD)
+    '2026-09-20T19:00:00+02:00'  // Seeding Session 2 (+0 COTD)
+  ].map(x => new Date(x));
+
+  const update = () => {
+    const now = new Date();
+    items.forEach(el => el.classList.remove('hot', 'blitz-current', 'blitz-complete'));
+
+    let active = milestones.findIndex(date => now < date);
+    if (active === -1) active = items.length - 1;
+
+    items.forEach((el, i) => {
+      if (i < active) el.classList.add('blitz-complete');
+      if (i === active) el.classList.add('blitz-current');
+    });
+  };
+
+  update();
+  setInterval(update, 60000);
 })();
 </script>
 </body></html>
