@@ -23,6 +23,7 @@ jobs:
           t = t.replace('[14,12,11,9,8,6,5,3,2,0]', '[17.5,15,12.5,10,7.5,5,2.5,0]')
           t = t.replace('loraii / alxshaer / wouter</p>', 'loraii / alxshaer / wouter / falcogrine</p>')
           t = t.replace('loraii · alxshaer · wouter</p>', 'loraii · alxshaer · wouter · falcogrine</p>')
+          t = t.replace('Play Map A + Map B. Field three players per map. Your seed is determined entirely by your ranked seeding rounds — there is no Time Attack component.', 'Play Map A + Map B. Field two players per map. Your seed is determined by your ranked seeding rounds, with your worst overall result excluded from the final seeding calculation.')
           p.write_text(t)
           PY
       - name: Commit update
