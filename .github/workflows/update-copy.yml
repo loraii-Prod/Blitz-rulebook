@@ -17,15 +17,16 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p = Path('index.html')
           t = p.read_text()
           t = t.replace('grid-template-columns:repeat(10,1fr)', 'grid-template-columns:repeat(8,1fr)')
           t = t.replace('[14,12,11,9,8,6,5,3,2,0]', '[17.5,15,12.5,10,7.5,5,2.5,0]')
           t = t.replace('loraii / alxshaer / wouter</p>', 'loraii / alxshaer / wouter / falcogrine</p>')
           t = t.replace('loraii · alxshaer · wouter</p>', 'loraii · alxshaer · wouter · falcogrine</p>')
-          t = t.replace('Play Map A + Map B. Field three players per map. Your seed is determined entirely by your ranked seeding rounds — there is no Time Attack component.', 'Play Map A + Map B. Field two different players per map; a player may not play both maps during seeding. Your seed is determined by your ranked seeding rounds, with your worst overall result excluded from the final seeding calculation.')
-          t = t.replace('Play Map A + Map B. Field two players per map. Your seed is determined by your ranked seeding rounds, with your worst overall result excluded from the final seeding calculation.', 'Play Map A + Map B. Field two different players per map; a player may not play both maps during seeding. Your seed is determined by your ranked seeding rounds, with your worst overall result excluded from the final seeding calculation.')
-          t = t.replace('Each team fields three players on each map.', 'Each team fields two players on each map.')
+          seeding = '''<section class="section" id="seeding"><div class="section-head"><div class="section-no mono">05</div><h2>Seeding <em>Stage.</em></h2></div><p class="intro">Two seeding maps will be played: <strong>Map A and Map B</strong>. Each map will be played over <strong>10 rounds</strong>, with <strong>2 players from each team per map</strong>. A player cannot play both maps during the Seeding Stage, meaning each team must field <strong>4 different players</strong> across Map A and Map B. Teams receive results based on their performance across the two maps, with the team's <strong>worst overall result excluded</strong> from the final seeding calculation. Two sessions will be available for each map.</p><div class="seed-layout"><div class="map-art"><div class="letters"><span>A</span><span>B</span></div><svg viewBox="0 0 500 420"><path d="M70 326c66-6 72-115 165-118 71-2 82 72 159 48 44-14 63-78 15-111-49-33-102 20-82 67 19 44 92 39 99 94"/></svg></div><div class="scorecard"><div class="score-total"><strong>10</strong><span class="mono">Rounds per map</span></div><div class="splitbar"></div><div class="round-grid"><div class="round"><b>01</b><small>Round</small></div><div class="round"><b>02</b><small>Round</small></div><div class="round"><b>03</b><small>Round</small></div><div class="round"><b>04</b><small>Round</small></div><div class="round"><b>05</b><small>Round</small></div><div class="round"><b>06</b><small>Round</small></div><div class="round"><b>07</b><small>Round</small></div><div class="round"><b>08</b><small>Round</small></div><div class="round"><b>09</b><small>Round</small></div><div class="round"><b>10</b><small>Round</small></div></div></div></div></section>'''
+          t = re.sub(r'<section class="section" id="seeding">.*?</section>(?=\n<section class="section" id="format">)', seeding, t, count=1, flags=re.S)
+          t = t.replace('.round-grid{display:grid;grid-template-columns:repeat(8,1fr)', '.round-grid{display:grid;grid-template-columns:repeat(10,1fr)')
           p.write_text(t)
           PY
       - name: Commit update
