@@ -20,6 +20,20 @@ jobs:
           import re
           p = Path('index.html')
           t = p.read_text()
+
+          # Seeding Session 2 is COTD +1 everywhere.
+          t = t.replace('<div class="t">Seeding Session 2</div><div class="s">+0 COTD</div>', '<div class="t">Seeding Session 2</div><div class="s">+1 COTD</div>')
+          t = t.replace('<div class="name">Seeding Session 2</div><div class="time mono">+0 COTD</div>', '<div class="name">Seeding Session 2</div><div class="time mono">+1 COTD</div>')
+
+          # Remove RPG branding/copy from the website.
+          t = t.replace('<title>Blitz League — RPG S1</title>', '<title>Blitz League — Season 1</title>')
+          t = t.replace('<sup>RPG S1</sup>', '<sup>S1</sup>')
+          t = t.replace('<strong>RPG S1</strong>', '<strong>S1</strong>')
+          t = t.replace('Master the RPG, earn your seed, survive the groups and fight your way through the bracket.', 'Master the maps, earn your seed, survive the groups and fight your way through the bracket.')
+          t = t.replace('Blitz League is a 3v3 Trackmania RPG team tournament.', 'Blitz League is a 3v3 Trackmania team tournament.')
+          # Safety pass: remove any remaining standalone RPG mentions.
+          t = re.sub(r'\bRPG\b\s*', '', t, flags=re.I)
+
           css = '''/* SEEDING VISUAL GUIDE */
           .seed-guide{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--hair);background:#0b0d0a}
           .seed-step{position:relative;min-height:280px;padding:24px 20px;border-right:1px solid var(--hair);text-align:center;display:flex;flex-direction:column;align-items:center}
@@ -42,5 +56,5 @@ jobs:
             echo "No index changes needed."
             exit 0
           fi
-          git commit -m "Normalize seeding percentages to 100 percent"
+          git commit -m "Update seeding session and remove RPG branding"
           git push
