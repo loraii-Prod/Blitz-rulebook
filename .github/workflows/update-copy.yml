@@ -24,6 +24,7 @@ jobs:
           t = t.replace('loraii / alxshaer / wouter</p>', 'loraii / alxshaer / wouter / falcogrine</p>')
           t = t.replace('loraii · alxshaer · wouter</p>', 'loraii · alxshaer · wouter · falcogrine</p>')
           t = t.replace('Play Map A + Map B. Field three players per map. Your seed is determined entirely by your ranked seeding rounds — there is no Time Attack component.', 'Play Map A + Map B. Field two players per map. Your seed is determined by your ranked seeding rounds, with your worst overall result excluded from the final seeding calculation.')
+          t = t.replace('Each team fields three players on each map.', 'Each team fields two players on each map.')
           p.write_text(t)
           PY
       - name: Commit update
