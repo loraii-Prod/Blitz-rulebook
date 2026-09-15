@@ -19,7 +19,8 @@ jobs:
           from pathlib import Path
           p = Path('index.html')
           t = p.read_text()
-          t = t.replace('Playoffs. <em>Earn the edge.</em>', 'Playoffs. <em>Fight for the title.</em>')
+          t = t.replace('<div class="t">Seeding Session 2</div><div class="s">+1 COTD</div>', '<div class="t">Seeding Session 2</div><div class="s">+0 COTD</div>')
+          t = t.replace('<div class="name">Seeding Session 2</div><div class="time mono">+1 COTD</div>', '<div class="name">Seeding Session 2</div><div class="time mono">+0 COTD</div>')
           p.write_text(t)
           PY
       - name: Commit update
@@ -31,5 +32,5 @@ jobs:
             echo "No index changes needed."
             exit 0
           fi
-          git commit -m "Update playoffs heading"
+          git commit -m "Restore Seeding Session 2 to COTD +0"
           git push
